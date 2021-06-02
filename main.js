@@ -1,7 +1,7 @@
 var round=Math.round,floor=Math.floor,abs=Math.abs,sqrt=Math.sqrt,asin=Math.asin,acos=Math.acos,sin=Math.sin,cos=Math.cos,PI=Math.PI,min=Math.min,max=Math.max,pow=Math.pow;
 var imgBuff,lp,key,seed,t,b,rvrb;
 var doc=document,win=window,hidden;
-var CVS,SZ,CTR,CD,C,EASTER=false;
+var CVS,SZ,CTR,CD,C,loaded=false;
 
 // RANDOMNESS
 function urandint(n)
@@ -418,9 +418,11 @@ function initSound()
 	rvrb.drywet( 100 );
 	t.voice.connect( rvrb );
 	b.voice.connect( rvrb );
+	loaded = true;
 }
 function play()
 {
+	if ( !loaded ) initSound();
 	var hands = [t,b], h;
 	for ( var i=0; i<hands.length; i++ )
 	{
@@ -449,7 +451,6 @@ function init()
 {
         CVS = doc.querySelector( "canvas" );
         C = CVS.getContext( "2d" );
-	initSound();
 
         hidden = doc.createElement( "div" );
         hidden.style.display = "none";
