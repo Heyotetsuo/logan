@@ -1,12 +1,11 @@
 var round=Math.round,floor=Math.floor,abs=Math.abs,sqrt=Math.sqrt,asin=Math.asin,acos=Math.acos,sin=Math.sin,cos=Math.cos,PI=Math.PI,min=Math.min,max=Math.max,pow=Math.pow;
-var imgBuff,lp,key,seed,t,b,rvrb;
-var doc=document,win=window,hidden;
-var CVS,SZ,CTR,CD,C,loaded=false;
+var CVS,SZ,CTR,CD, doc=document,win=window,hidden;
+var imgBuff,lp,key,seed,t,b, rvrb,song,soundLoaded=false;
 
 // RANDOMNESS
 function urandint(n)
 {
-        return abs( randint(n) )
+        return abs( randint(n) );
 }
 function randint(n)
 {
@@ -21,10 +20,10 @@ function urand(n)
         var seed = randint( n );
         return ((seed<0 ? ~seed+1 : seed) % 1024) / 1024;
 }
-function rand(n){ return urand(n)*2-1 };
+function rand(n){ return urand(n)*2-1; }
 function newHash()
 {
-        var a = [0,1,2,3,4,5,6,7,8,9,"a","b","c","d","e","f"];
+        var a = [0,1,2,3,4,5,6,7,8,9,'a','b','c','d','e','f'];
         var s="", i;
         for( i=0; i<64; i++ )
         {
@@ -42,28 +41,65 @@ function resetSeed()
 
 
 
-// STRING MANIPULATION AND LOGGING
-function logf( s, a ) { console.log( printf(s,a) ) }
+// HELPERS
+function logf( s, a ) { console.log( printf(s,a) ); }
+function alertf( s, a ) { alert( printf(s,a) ); }
 function printf( s, a )
 {
 	var S=s, i;
 	for( i=0; i<a.length; i++ )
 	{
-		S = S.replace( "%s", a[i] );
+		S = S.replace( "%s", a[i].toString() );
 	}
 	return S;
+}
+function vardump( o, s )
+{
+	if (!s) s = "";
+	for(var p in o)
+	{
+		s += printf( "%s: %s\n", [p,o[p]] );
+	}
+	return s;
+}
+function tryFunc( func, args )
+{
+	try {
+		args ? func( ...args ) : func() ;
+	} catch(e) {
+		alert( e.toString() );
+	}
+}
+function saveImg(i)
+{
+	var url = CVS.toDataURL();
+	var img = doc.createElement("img");
+	img.src = url;
+	if( i )
+	{
+		imgBuff[i]=img;
+		hidden.appendChild(img);
+	}
+}
+function uiFeedback()
+{
+	document.body.style.backgroundColor = "gray";
+	setTimeout( function()
+	{
+		document.body.style.backgroundColor = "white";
+	}, 100);
 }
 
 
 
 // MATH
-function normInt(s){ return parseInt(s,32)-SZ };
-function d2r(n){ return n*PI/180 };
-function r2d(n){ return n*180/PI };
-function to1(n){ return n/255 };
-function to1N(n){ return n/128-1 };
-function getVec( a, b ){ return [ a[0]-b[0], a[1]-b[1] ] }
-function getVecLen( v ){ return sqrt( pow(v[0],2) + pow(v[1],2) ) }
+function normInt(s){ return parseInt(s,32)-SZ; }
+function d2r(n){ return n*PI/180; }
+function r2d(n){ return n*180/PI; }
+function to1(n){ return n/255; }
+function to1N(n){ return n/128-1; }
+function getVec( a, b ){ return [ a[0]-b[0], a[1]-b[1] ]; }
+function getVecLen( v ){ return sqrt( pow(v[0],2) + pow(v[1],2) ); }
 function doOp( a, b, op )
 {
 	return (
@@ -103,10 +139,10 @@ function hexMath( hex, num, op )
 	}
 	return hex2;
 }
-function d2r( deg ){ return deg*PI/180 }
-function r2d( rad ){ return rad*180/PI }
-function getHypo(a,b){ return sqrt(abs(a*a+b*b)) }
-function getAngle(a,b,c){ return Math.acos(abs(a/c))*(180/PI) }
+function d2r( deg ){ return deg*PI/180; }
+function r2d( rad ){ return rad*180/PI; }
+function getHypo(a,b){ return sqrt(abs(a*a+b*b)); }
+function getAngle(a,b,c){ return Math.acos(abs(a/c))*(180/PI); }
 function getPointInCircle( x, y, Rx, Ry )
 {
         var r = urand();
@@ -117,29 +153,6 @@ function getPointInCircle( x, y, Rx, Ry )
                 x + rx*cos(t),
                 y + ry*sin(t)
         ];
-}
-
-
-
-// DEBUGGING
-function saveImg( i )
-{
-        var url = CVS.toDataURL();
-        var img = doc.createElement( "img" );
-        img.src = url;
-        if ( i )
-        {
-                imgBuff[i] = img;
-                hidden.appendChild( img );
-        }
-}
-function testHash( n )
-{
-        if ( n )
-        {
-                // for testing
-                tokenData.hash = n;
-        }
 }
 
 
@@ -284,7 +297,7 @@ function gaussBlur( src, tgt, w, h, r )
 }
 function fastBlur( amount )
 {
-        var w = h = SZ, c=[], i, j;
+        var w=SZ, h=SZ, c=[], i, j;
         var d = C.getImageData( 0, 0, w, h );
         for( i=0; i<3; i++ )
         {
@@ -350,7 +363,8 @@ function addBlob( p, size, spread, count, clip )
                         spread[0],
                         spread[1]
                 );
-                x2=pos[0], y2=pos[1];
+                x2=pos[0];
+		y2=pos[1];
                 fillCircle( x2, y2, size );
         }
 	fillCircle( x, y, size*1.5 );
@@ -362,12 +376,13 @@ function addBG( bIdx )
                 C.drawImage( imgBuff[bIdx], 0, 0 );
                 return;
         }
-        var grad, ca, cb, i;
+        var ca, cb, i;
         var grad = C.createRadialGradient(
                 CTR, CTR, 0, 
                 CTR, CTR, SZ
         );
-        ca = CD.bgC, cb = hexMath( ca, 0.95, '*' );
+        ca = CD.bgC;
+	cb = hexMath( ca, 0.95, '*' );
         grad.addColorStop( 0, ca );
         grad.addColorStop( 1, cb );
         C.fillStyle = grad;
@@ -381,59 +396,121 @@ function addBG( bIdx )
 
 
 
+// COMPOSITION
+function getTempo()
+{
+	var tempos = [ 54, 66, 80, 120, 156 ];
+	return tempos[ urandint()%tempos.length ];
+}
+function getTimeSig()
+{
+	var sigs = [ "3/4", "4/4", "6/8", "8/16" ];
+	return sigs[ urandint()%sigs.length ];
+}
+function getKey()
+{
+	var keys = [
+		[ "C", "D", "E", "G", "A"],
+		[ "C", "D", "D#", "E", "G", "A"],
+		[ "A", "B", "C", "D#", "E", "F#"],
+		[ "D", "E", "F#", "G", "A", "B", "C#"],
+		[ "E", "F#", "G", "A", "B", "C", "D"],
+		[ "F", "G", "G#", "A#", "C", "C#", "E"],
+		[ "A#", "C", "C#", "E", "F", "G", "G#"],
+		[ "G", "G#", "A#", "C", "C#", "E", "F"]
+	];
+	return keys[ urandint()%keys.length ];
+}
+function getNote()
+{
+	return song.key[ urandint()%song.key.length ];
+}
+function getHold( rem )
+{
+	// NOTE: consider "staccato" "glissando" and "legato"
+	var holds = [ 1, 1/2, 1/4, 1/8 ];
+	return holds[ urandint()%holds.length ];
+}
+function getVelo( rem )
+{
+	// NOTE: consider "piano", "mezzo", "forte"
+	// NOTE: consider "none", "crescendo", "decresceno"
+	return 1;
+}
+function getBar()
+{
+	var notes=[], delays=[], holds=[], velos=[], rem=1, i=0;
+	while( rem > 0 )
+	{
+		notes.push( getNote() ); // can be a "breath"
+		delays.push( 1-rem );
+		holds.push( getHold(rem) );
+		velos.push( getVelo(rem) );
+		rem -= holds[holds.length-1];
+
+		// handle "breaths" and octaves
+		if ( !notes[i] )
+		{
+			notes[i] = "C1";
+			velos[i] = 0;
+		} else {
+			notes[i] += song.voice.octave;
+		}
+		i++;
+	}
+	return {
+		notes: notes,
+		delays: delays,
+		holds: holds,
+		velos: velos
+	};
+}
+function compose()
+{
+	song = {
+		key: getKey(),
+		tempo: getTempo(),
+		timeSig: getTimeSig(),
+		voice: {
+			instrument: null,
+			octave: 4,
+			bars: []
+		}
+	};
+	var numBars = urandint()%8+1, i;
+	for( i=0; i<numBars; i++ )
+	{
+		song.voice.bars[i] = getBar();
+	}
+	return song;
+}
+
+
+
 // SOUND
 function initSound()
 {
-	t = {
-		voice: new p5.PolySynth(),
-		notes: [
-			'C5', 'D5', 'E5', 'F5', 'G5'
-		],
-		delays: [
-			1/4, 2/4, 3/4, 4/4, 5/4
-		],
-		holds: [
-			2/4, 1/4, 2/4, 1/4, 3/4
-		],
-		velos: [
-			1/10, 2/10, 3/10, 4/10, 5/10
-		]
-	}
-	b = {
-		voice: new p5.PolySynth(),
-		notes: [
-			'C2', 'G2', 'C2', 'C3'
-		],
-		delays: [
-			1/4, 3/4, 5/4, 5/4
-		],
-		holds: [
-			2/4, 2/4, 3/4, 3/4
-		],
-		velos: [
-			1/10, 3/10, 3/10, 3/10
-		]
-	}
 	rvrb = new p5.Reverb();
 	rvrb.drywet( 100 );
-	t.voice.connect( rvrb );
-	b.voice.connect( rvrb );
-	loaded = true;
+	song.voice.instrument = new p5.PolySynth();
+	song.voice.instrument.connect( rvrb );
+	soundLoaded = true;
 }
 function play()
 {
-	if ( !loaded ) initSound();
-	var hands = [t,b], h;
-	for ( var i=0; i<hands.length; i++ )
+	uiFeedback();
+	if ( !soundLoaded ) tryFunc( initSound );
+	var bars = song.voice.bars, i, j;
+	for ( i=0; i<bars.length; i++ )
 	{
-		h = hands[i];
-		for( var j=0; j<h.notes.length; j++ )
+		for( j=0; j<bars[i].notes.length; j++ )
 		{
-			h.voice.play(
-				h.notes[j],
-				h.velos[j],
-				h.delays[j],
-				h.holds[j]
+			song.voice.instrument.play(
+				bars[i].notes[j],
+				bars[i].velos[j],
+				bars[i].delays[j]+i,
+				bars[i].holds[j]
+			
 			);
 		}
 	}
@@ -493,7 +570,8 @@ function main(n)
                 testHash(n);
         }
         init();
+	compose();
         render();
-	window.addEventListener( "click", ()=>play() );
+	CVS.addEventListener( "click", play );
 }
 main();
