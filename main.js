@@ -440,7 +440,7 @@ function getVelo( rem )
 {
 	// NOTE: consider "piano", "mezzo", "forte"
 	// NOTE: consider "none", "crescendo", "decresceno"
-	return 1;
+	return urand()*0.9+0.1;
 }
 function getBar()
 {
