@@ -442,7 +442,7 @@ function getVelo( rem )
 	// NOTE: consider "none", "crescendo", "decresceno"
 	return urand()*0.9+0.1;
 }
-function getBar()
+function getBar( voice )
 {
 	var notes=[], delays=[], holds=[], velos=[], rem=1, i=0;
 	while( rem > 0 )
@@ -454,21 +454,15 @@ function getBar()
 		rem -= holds[holds.length-1];
 
 		// handle "breaths" and octaves
-		if ( !notes[i] )
-		{
-			notes[i] = "C1";
-			velos[i] = 0;
-		} else {
-			notes[i] += song.voice.octave;
-		}
+		notes[i] += voice.octave;
 		i++;
 	}
-	return {
+	voice.bars.push({
 		notes: notes,
 		delays: delays,
 		holds: holds,
 		velos: velos
-	};
+	});
 }
 function compose()
 {
@@ -476,16 +470,25 @@ function compose()
 		key: getKey(),
 		tempo: getTempo(),
 		timeSig: getTimeSig(),
-		voice: {
-			instrument: null,
-			octave: 4,
-			bars: []
-		}
+		voices: [
+			{
+				instrument: null,
+				octave: 3,
+				bars: []
+			}, {
+				instrument: null,
+				octave: 5,
+				bars: []
+			}
+		]
 	};
-	var numBars = urandint()%8+1, i;
+	var numBars = urandint()%8+1, i, j;
 	for( i=0; i<numBars; i++ )
 	{
-		song.voice.bars[i] = getBar();
+		for( j=0; j<song.voices.length; j++ )
+		{
+			getBar( song.voices[j] );
+		}
 	}
 	return song;
 }
@@ -498,32 +501,39 @@ function initSound()
 	rvrb = new p5.Reverb();
 	rvrb.set( 1, 1 );
 	rvrb.drywet( 1 );
-	song.voice.instrument = new p5.PolySynth();
-	song.voice.instrument.connect( rvrb );
+	for( var i=0; i<song.voices.length; i++ )
+	{
+		song.voices[i].instrument = new p5.PolySynth();
+		song.voices[i].instrument.connect( rvrb );
+	}
 	soundLoaded = true;
 }
 function play()
 {
 	uiFeedback();
 	if ( !soundLoaded ) initSound();
-	var len = song.voice.bars.length;
-	var bars = song.voice.bars, i,j,k;
-	for ( i=0; i<4; i++ )
+	for ( l=0; l<song.voices.length; l++ )
 	{
-		for ( j=0; j<bars.length; j++ )
+		var voice = song.voices[l];
+		var len = voice.bars.length;
+		var bars = voice.bars, i,j,k,l;
+		for ( i=0; i<4; i++ )
 		{
-			for( k=0; k<bars[j].notes.length; k++ )
+			for ( j=0; j<bars.length; j++ )
 			{
-				song.voice.instrument.play(
-					bars[j].notes[k],
-					bars[j].velos[k],
-					(
-						bars[j].delays[k] + // note offset
-						j + // bar offset
-						i * (len-1) // loop offset
-					) * (song.tempo/60), // tempo offset
-					bars[j].holds[k]
-				);
+				for( k=0; k<bars[j].notes.length; k++ )
+				{
+					voice.instrument.play(
+						bars[j].notes[k],
+						bars[j].velos[k],
+						(
+							bars[j].delays[k] + // note offset
+							j + // bar offset
+							i * (len-1) // loop offset
+						) * (song.tempo/60), // tempo offset
+						bars[j].holds[k]
+					);
+				}
 			}
 		}
 	}
