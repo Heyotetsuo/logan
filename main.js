@@ -53,12 +53,17 @@ function printf( s, a )
 	}
 	return S;
 }
-function vardump( o, s )
+function vardump( o, brief )
 {
-	if (!s) s = "";
+	s = '';
 	for(var p in o)
 	{
-		s += printf( "%s: %s\n", [p,o[p]] );
+		if ( brief )
+		{
+			s += p + '\n';
+		} else {
+			s += printf( "%s: %s\n", [p,o[p]] );
+		}
 	}
 	return s;
 }
@@ -491,7 +496,8 @@ function compose()
 function initSound()
 {
 	rvrb = new p5.Reverb();
-	rvrb.drywet( 100 );
+	rvrb.set( 1, 1 );
+	rvrb.drywet( 1 );
 	song.voice.instrument = new p5.PolySynth();
 	song.voice.instrument.connect( rvrb );
 	soundLoaded = true;
@@ -499,19 +505,22 @@ function initSound()
 function play()
 {
 	uiFeedback();
-	if ( !soundLoaded ) tryFunc( initSound );
-	var bars = song.voice.bars, i, j;
-	for ( i=0; i<bars.length; i++ )
+	if ( !soundLoaded ) initSound();
+	var len = song.voice.bars.length;
+	var bars = song.voice.bars, i,j,k;
+	for ( i=0; i<4; i++ )
 	{
-		for( j=0; j<bars[i].notes.length; j++ )
+		for ( j=0; j<bars.length; j++ )
 		{
-			song.voice.instrument.play(
-				bars[i].notes[j],
-				bars[i].velos[j],
-				bars[i].delays[j]+i,
-				bars[i].holds[j]
-			
-			);
+			for( k=0; k<bars[j].notes.length; k++ )
+			{
+				song.voice.instrument.play(
+					bars[j].notes[k],
+					bars[j].velos[k],
+					bars[j].delays[k] + j + i * (len-1),
+					bars[j].holds[k]
+				);
+			}
 		}
 	}
 }
