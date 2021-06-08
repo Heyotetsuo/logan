@@ -517,7 +517,11 @@ function play()
 				song.voice.instrument.play(
 					bars[j].notes[k],
 					bars[j].velos[k],
-					bars[j].delays[k] + j + i * (len-1),
+					(
+						bars[j].delays[k] + // note offset
+						j + // bar offset
+						i * (len-1) // loop offset
+					) * (song.tempo/60), // tempo offset
 					bars[j].holds[k]
 				);
 			}
