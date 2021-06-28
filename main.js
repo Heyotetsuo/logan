@@ -527,10 +527,14 @@ function compose()
 				instrument: null,
 				hand: 1,
 				bars: []
+			}, {
+				instrument: null,
+				hand: 2,
+				bars: []
 			}
 		]
 	};
-	var numBars = urandint()%8+1, voice, i, j;
+	var numBars = urandint()%8+4, voice, i, j;
 	for( i=0; i<numBars; i++ )
 	{
 		for( j=0; j<song.voices.length; j++ )
