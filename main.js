@@ -42,6 +42,7 @@ function resetSeed()
 
 
 // HELPERS
+const log = console.log;
 function logf( s, a ) { console.log( printf(s,a) ); }
 function alertf( s, a ) { alert( printf(s,a) ); }
 function printf( s, a )
@@ -93,6 +94,15 @@ function uiFeedback()
 	{
 		document.body.style.backgroundColor = "white";
 	}, 100);
+}
+function copyArray( a, b )
+{
+	b = b || [];
+	for( var i=0; i<a.length; i++ )
+	{
+		b[i] = a[i];
+	}
+	return b;
 }
 
 
@@ -442,6 +452,33 @@ function getVelo( rem )
 	// NOTE: consider "none", "crescendo", "decresceno"
 	return urand()*0.9+0.1;
 }
+function riff( voice, bar )
+{
+	var note, i;
+	var newBar = {
+		notes: copyArray( bar.notes ),
+		delays: copyArray( bar.delays ),
+		holds: copyArray( bar.holds ),
+		velos: copyArray( bar.velos )
+	};
+	for( i=0; i<newBar.notes.length; i++ )
+	{
+		// can be a "breath"
+		if ( urandint()%2 === 0 )
+		{
+			note = getNote() + (voice.hand ? 3 : 5);
+			newBar.notes[i] = note;
+		}
+
+		i++;
+	}
+	voice.bars.push({
+		notes: newBar.notes,
+		delays: newBar.delays,
+		holds: newBar.holds,
+		velos: newBar.velos
+	});
+}
 function getBar( voice )
 {
 	var notes=[], delays=[], holds=[], velos=[], rem=1, i=0;
@@ -454,7 +491,18 @@ function getBar( voice )
 		rem -= holds[holds.length-1];
 
 		// handle "breaths" and octaves
-		notes[i] += voice.octave;
+		switch( voice.hand )
+		{
+		case 0:
+			notes[i] += 5;
+			break;
+		case 1:
+			notes[i] += 3;
+			break;
+		default:
+			break;
+		}
+
 		i++;
 	}
 	voice.bars.push({
@@ -473,21 +521,28 @@ function compose()
 		voices: [
 			{
 				instrument: null,
-				octave: 3,
+				hand: 0,
 				bars: []
 			}, {
 				instrument: null,
-				octave: 5,
+				hand: 1,
 				bars: []
 			}
 		]
 	};
-	var numBars = urandint()%8+1, i, j;
+	var numBars = urandint()%8+1, voice, i, j;
 	for( i=0; i<numBars; i++ )
 	{
 		for( j=0; j<song.voices.length; j++ )
 		{
-			getBar( song.voices[j] );
+			// first bar gets reused as a "riff"
+			voice = song.voices[j];
+			if ( voice.bars.length > 0 )
+			{
+				riff( voice, voice.bars[0] );
+			} else {
+				getBar( voice );
+			}
 		}
 	}
 	return song;
@@ -511,7 +566,7 @@ function initSound()
 function play()
 {
 	uiFeedback();
-	if ( !soundLoaded ) initSound();
+	initSound();
 	for ( l=0; l<song.voices.length; l++ )
 	{
 		var voice = song.voices[l];
@@ -547,7 +602,7 @@ function render( blink )
         resetSeed();
 	addBG();
 }
-function init()
+function init(n)
 {
         CVS = doc.querySelector( "canvas" );
         C = CVS.getContext( "2d" );
@@ -583,16 +638,12 @@ function init()
                 ],
                 bgC: "#ddeeff"
         };
-        newHash();
+	n ? tokenData.hash = n : newHash() ;
 	resetSeed();
 }
 function main(n)
 {
-        if ( n )
-        {
-                testHash(n);
-        }
-        init();
+        init(n);
 	compose();
         render();
 	CVS.addEventListener( "click", play );
