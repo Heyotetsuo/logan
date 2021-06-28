@@ -537,7 +537,7 @@ function compose()
 		{
 			// first bar gets reused as a "riff"
 			voice = song.voices[j];
-			if ( voice.bars.length > 0 )
+			if ( (voice.bars.length+1)%2 === 0 )
 			{
 				riff( voice, voice.bars[0] );
 			} else {
