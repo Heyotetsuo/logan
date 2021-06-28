@@ -499,6 +499,12 @@ function getBar( voice )
 		case 1:
 			notes[i] += 3;
 			break;
+		case 2:
+			notes[i] += 2;
+			break;
+		case 3:
+			notes[i] += 4;
+			break;
 		default:
 			break;
 		}
@@ -530,6 +536,10 @@ function compose()
 			}, {
 				instrument: null,
 				hand: 2,
+				bars: []
+			}, {
+				instrument: null,
+				hand: 3,
 				bars: []
 			}
 		]
