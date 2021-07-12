@@ -588,8 +588,10 @@ function isBanned( a, b )
 		"BC", "CB",
 		"CC#", "C#C",
 		"C#D", "DC#",
+		"CF#", "F#C",
 		"DD#", "D#D",
 		"D#E", "ED#",
+		"DG#", "G#D",
 		"EF", "FE",
 		"F#G", "GF#",
 		"GG#", "G#G"
