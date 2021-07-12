@@ -518,6 +518,120 @@ function getBar( voice )
 		velos: velos
 	});
 }
+function checkQuery( query )
+{
+	if ( !query ){ return false; }
+	var i=query[0], j=query[1], k=query[2];
+	return (
+		song.voices.length > i &&
+		song.voices[i].bars.length > j &&
+		song.voices[i].bars[j].notes.length > k
+	);
+
+}
+function getNextQuery( query )
+{
+	var i=query[0], j=query[1], k=query[2];
+	var voice = song.voices[i];
+	var bar = voice.bars[j];
+
+	if ( bar.notes.length > k+1 )
+	{
+		return [i,j,k+1];
+	} else if ( voice.bars.length > j+1 ) {
+		return [i,j+1,0];
+	} else if ( song.voices.length > i+1 ) {
+		return [i+1,0,0];
+	} else {
+		return null;
+	}
+}
+function querySong( query )
+{
+	switch( query.length )
+	{
+	case 3:
+		var i=query[0], j=query[1], k=query[2];
+		return song.voices[i].bars[j].notes[k];
+	case 2:
+		var i=query[0], j=query[1];
+		return song.voices[i].bars[j];
+	case 1:
+		var i=query[0];
+		return song.voices[i];
+	default:
+		return false;
+	}
+}
+function isInRange( a, b )
+{
+	var a1=a.start, a2=a.end;
+	var b1=b.start, b2=b.end;
+	return (
+		a1>=b1 && a1<b2 ||
+		a2>=b1 && a2<b2
+	);
+}
+function getNoteRange( bar, i )
+{
+	var delay = bar.delays[i];
+	var hold = bar.holds[i];
+	return {
+		start: delay,
+		end: delay + hold
+	};
+}
+function isBanned( a, b )
+{
+	var c = [a,b].join();
+	var banned = [
+		"BC", "CB",
+		"CC#", "C#C",
+		"C#D", "DC#",
+		"DD#", "D#D",
+		"D#E", "ED#",
+		"EF", "FE",
+		"F#G", "GF#",
+		"GG#", "G#G"
+	]
+	return banned.includes(c);
+}
+function revise()
+{
+	var voiceA, voiceB;
+	var barA, barB;
+	var noteA, noteB;
+	var rangeA, rangeB;
+	var queryA = [0,0,0], queryB = [0,0,0];
+	var i, j, k, l, m, n;
+
+	// for each NOTE_A and NOTE_B
+	while( checkQuery(queryA) )
+	{
+		i=queryA[0], j=queryA[1], k=queryA[2];
+		barA = querySong( [i,j] );
+		rangeA = getNoteRange( barA, k );
+		noteA = querySong( queryA );
+
+		while( checkQuery(queryB) )
+		{
+			l=queryB[0], m=queryB[1], n=queryB[2];
+			barB = querySong( [l,m] );
+			rangeB = getNoteRange( barB, n );
+			noteB = querySong( queryB );
+
+			if ( isInRange(rangeA,rangeB) )
+			{
+				while( isBanned(noteA,noteB) )
+				{
+					barA.notes[k] = getNote();
+				}
+			}
+			queryB = getNextQuery( queryB );
+		}
+		queryA = getNextQuery( queryA );
+	}
+}
 function compose()
 {
 	song = {
@@ -559,7 +673,7 @@ function compose()
 			}
 		}
 	}
-	return song;
+	revise();
 }
 
 
