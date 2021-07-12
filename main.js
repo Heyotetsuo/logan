@@ -585,6 +585,10 @@ function isBanned( a, b )
 {
 	var c = [a,b].join();
 	var banned = [
+		"AG#", "G#A",
+		"A#A", "AA#",
+		"A#E", "EA#",
+		"BA#", "A#B",
 		"BC", "CB",
 		"CC#", "C#C",
 		"C#D", "DC#",
@@ -595,8 +599,8 @@ function isBanned( a, b )
 		"D#E", "ED#",
 		"DG#", "G#D",
 		"EF", "FE",
-		"AG#", "A#E",
 		"FB", "BF",
+		"FF#", "F#F",
 		"F#G", "GF#",
 		"GG#", "G#G"
 	]
