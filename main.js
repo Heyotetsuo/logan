@@ -595,7 +595,7 @@ function isBanned( a, b )
 		"D#E", "ED#",
 		"DG#", "G#D",
 		"EF", "FE",
-		"EG#", "A#E",
+		"AG#", "A#E",
 		"FB", "BF",
 		"F#G", "GF#",
 		"GG#", "G#G"
