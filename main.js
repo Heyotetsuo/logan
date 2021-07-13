@@ -104,6 +104,18 @@ function copyArray( a, b )
 	}
 	return b;
 }
+function displaySong()
+{
+	var el = doc.createElement( "div" );
+	el.innerText = JSON.stringify(song);
+	el.style.textAlign = "left";
+	el.style.padding = "2%";
+	el.style.cursor = "pointer";
+	el.style.position = "absolute";
+	el.style.zIndex = "1";
+	el.style.top = "0";
+	doc.body.appendChild( el );
+}
 
 
 
@@ -783,6 +795,7 @@ function main(n)
 {
         init(n);
 	compose();
+	displaySong();
         render();
 	CVS.addEventListener( "click", play );
 }
