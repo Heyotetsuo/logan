@@ -113,7 +113,7 @@ function displaySong()
 	el.style.cursor = "pointer";
 	el.style.position = "absolute";
 	el.style.zIndex = "1";
-	el.style.top = "0";
+	el.style.top = "100vh";
 	doc.body.appendChild( el );
 }
 
@@ -481,7 +481,6 @@ function riff( voice, bar )
 			note = getNote() + (voice.hand ? 3 : 5);
 			newBar.notes[i] = note;
 		}
-
 		i++;
 	}
 	voice.bars.push({
@@ -580,8 +579,8 @@ function isInRange( a, b )
 	var a1=a.start, a2=a.end;
 	var b1=b.start, b2=b.end;
 	return (
-		a1>=b1 && a1<b2 ||
-		a2>=b1 && a2<b2
+		a1>=b1 && a1<b2+0.25 ||
+		a2+0.25>=b1 && a2+0.25<b2+0.25
 	);
 }
 function getNoteRange( bar, i )
