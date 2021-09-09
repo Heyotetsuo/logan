@@ -166,6 +166,16 @@ function hexMath( hex, num, op )
 	}
 	return hex2;
 }
+function toHex( a )
+{
+        var s = '', hex, i;
+        for( i=0; i<a.length; i++ )
+        {
+                hex = parseInt(a[i]).toString(16);
+                s += String( "00" + hex ).slice(-2);
+        }
+        return s;
+}
 function d2r( deg ){ return deg*PI/180; }
 function r2d( rad ){ return rad*180/PI; }
 function getHypo(a,b){ return sqrt(abs(a*a+b*b)); }
@@ -699,6 +709,27 @@ function compose()
 
 
 
+// SYNESTHESIA
+function visualize( note, velo, delay, hold )
+{
+        var color = '#' + toHex([
+                urandint()%256,
+                urandint()%256,
+                urandint()%256,
+                urandint()%256
+        ]);
+        var r = urand()*SZ;
+        var x = urand()*( (SZ-r*2)+r*2 );
+        var y = urand()*( (SZ-r*2)+r*2 );
+
+        logf( "color:%s, x:%s, y:%s, r:%s", [color,x,y,r] );
+
+        C.fillStyle = color;
+        fillCircle( x, y, r );
+}
+
+
+
 // SOUND
 function initSound()
 {
@@ -721,22 +752,24 @@ function play()
 		var voice = song.voices[l];
 		var len = voice.bars.length;
 		var bars = voice.bars, i,j,k,l;
+                var note, velo, delay, hold;
 		for ( i=0; i<4; i++ )
 		{
 			for ( j=0; j<bars.length; j++ )
 			{
 				for( k=0; k<bars[j].notes.length; k++ )
 				{
-					voice.instrument.play(
-						bars[j].notes[k],
-						bars[j].velos[k],
-						(
-							bars[j].delays[k] + // note offset
-							j + // bar offset
-							i * (len-1) // loop offset
-						) * (song.tempo/60), // tempo offset
-						bars[j].holds[k]
-					);
+                                        note = bars[j].notes[k];
+                                        velo = bars[j].velos[k];
+                                        delay = bars[j].delays[k];
+                                        hold = bars[j].holds[k];
+                                        
+                                        // (note offset + bar offset + (loop offset * (len-1))) * tempo offset
+                                        fullDelay = ( delay + j + i * (len-1) ) * ( song.tempo/60 );
+
+                                        setTimeout( ()=>visualize(note,velo,delay,hold), fullDelay*1000 );
+
+					voice.instrument.play( note, velo, fullDelay, hold );
 				}
 			}
 		}
