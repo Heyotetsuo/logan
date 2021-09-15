@@ -739,7 +739,7 @@ function visualize( note, velo, delay, hold )
 function initVisuals()
 {
         var n = urand()*SZ;
-        BASESZ = Math.pow( n, 2 ) / SZ;
+        BASESZ = Math.pow( n, 3 ) / Math.pow( SZ, 2 );
         log( BASESZ );
         SZ_RANGE = urand() * BASESZ;
         PALETTES = [
@@ -752,6 +752,8 @@ function initVisuals()
                 [ "#b30000", "#ff4f00", "#ffb200", "#c81343", "#ff0062", "#fff", "#000" ],
                 [ "#b30000", "#ff4f00", "#ffb200", "#c81343", "#ff0062", "#fff", "#000" ]
         ];
+        BGS = [ 
+        ]
 }
 
 
