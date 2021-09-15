@@ -1,5 +1,5 @@
 var round=Math.round,floor=Math.floor,abs=Math.abs,sqrt=Math.sqrt,asin=Math.asin,acos=Math.acos,sin=Math.sin,cos=Math.cos,PI=Math.PI,min=Math.min,max=Math.max,pow=Math.pow;
-var CVS,SZ,CTR,CD, doc=document,win=window,hidden;
+var CVS,SZ,CTR,CD,BASESZ,SZ_RANGE, doc=document,win=window,hidden;
 var imgBuff,lp,key,seed,t,b, rvrb,song,soundLoaded=false;
 
 // RANDOMNESS
@@ -446,17 +446,8 @@ function getTimeSig()
 }
 function getKey()
 {
-	var keys = [
-		[ "C", "D", "E", "G", "A"],
-		[ "C", "D", "D#", "E", "G", "A"],
-		[ "A", "B", "C", "D#", "E", "F#"],
-		[ "D", "E", "F#", "G", "A", "B", "C#"],
-		[ "E", "F#", "G", "A", "B", "C", "D"],
-		[ "F", "G", "G#", "A#", "C", "C#", "E"],
-		[ "A#", "C", "C#", "E", "F", "G", "G#"],
-		[ "G", "G#", "A#", "C", "C#", "E", "F"]
-	];
-	return keys[ urandint()%keys.length ];
+
+        return urandint()%keys.length;
 }
 function getNote()
 {
@@ -665,8 +656,30 @@ function revise()
 }
 function compose()
 {
+	var keys = [
+		[ "C", "D", "E", "G", "A"],
+		[ "C", "D", "D#", "E", "G", "A"],
+		[ "A", "B", "C", "D#", "E", "F#"],
+		[ "D", "E", "F#", "G", "A", "B", "C#"],
+		[ "E", "F#", "G", "A", "B", "C", "D"],
+		[ "F", "G", "G#", "A#", "C", "C#", "E"],
+		[ "A#", "C", "C#", "E", "F", "G", "G#"],
+		[ "G", "G#", "A#", "C", "C#", "E", "F"]
+	];
+        var pals = [
+                [ "#ffff4d", "#ffff4d", "#4d7aff", "#3655b3", "#ff4d4d" ],
+                [ "#ffff4d", "#ffff4d", "#8936b3", "#4d7aff", "#3655b3", "#ff4d4d" ],
+                [ "#ff2c00", "#7e31ab", "#37b6a1", "#f2797f", "#2632b3", "#869cbe" ],
+                [ "#ffa586", "#ffdb61", "#4e9bde", "#85ccb9", "#aee467", "#ff86cd", "#397dff" ],
+                [ "#1f306e", "#553772", "#8f3b76", "#c7417b", "#f5487f", "#e3e4ef", "#27141a" ],
+                [ "#1f306e", "#553772", "#8f3b76", "#c7417b", "#f5487f", "#fff", "#000" ],
+                [ "#b30000", "#ff4f00", "#ffb200", "#c81343", "#ff0062", "#fff", "#000" ],
+                [ "#b30000", "#ff4f00", "#ffb200", "#c81343", "#ff0062", "#fff", "#000" ]
+        ];
+        var n = urandint()%keys.length;
+        CD.colors = pals[n];
 	song = {
-		key: getKey(),
+		key: keys[n],
 		tempo: getTempo(),
 		timeSig: getTimeSig(),
 		voices: [
@@ -687,7 +700,7 @@ function compose()
 				hand: 3,
 				bars: []
 			}
-		]
+		],
 	};
 	var numBars = urandint()%8+4, voice, i, j;
 	for( i=0; i<numBars; i++ )
@@ -709,23 +722,48 @@ function compose()
 
 
 
-// SYNESTHESIA
+// VISUALIZATION
+function displace( n, max, i )
+{
+        if ( i > 0 )
+        {
+                i--;
+                return displace( n, max, i );
+        } else {
+                return Math.sqrt( n * max ); 
+        }
+}
 function visualize( note, velo, delay, hold )
 {
-        var color = '#' + toHex([
-                urandint()%256,
-                urandint()%256,
-                urandint()%256,
-                urandint()%256
-        ]);
-        var r = urand()*SZ;
+        var numClrs = CD.colors.length;
+        var color = CD.colors[urandint()%numClrs];
+        var r = displace(
+                BASESZ + ( urand() * SZ_RANGE * 2-SZ_RANGE ),
+                BASESZ+SZ_RANGE/2,
+                2
+        );
         var x = urand()*( (SZ-r*2)+r*2 );
         var y = urand()*( (SZ-r*2)+r*2 );
 
-        logf( "color:%s, x:%s, y:%s, r:%s", [color,x,y,r] );
+        log( "color: "+color );
 
         C.fillStyle = color;
         fillCircle( x, y, r );
+}
+function initVisuals()
+{
+        BASESZ = urand()*SZ;
+        SZ_RANGE = urand()*BASESZ;
+        PALETTES = [
+                [ "#ffff4d", "#ffff4d", "#4d7aff", "#3655b3", "#ff4d4d" ],
+                [ "#ffff4d", "#ffff4d", "#8936b3", "#4d7aff", "#3655b3", "#ff4d4d" ],
+                [ "#ff2c00", "#7e31ab", "#37b6a1", "#f2797f", "#2632b3", "#869cbe" ],
+                [ "#ffa586", "#ffdb61", "#4e9bde", "#85ccb9", "#aee467", "#ff86cd", "#397dff" ],
+                [ "#1f306e", "#553772", "#8f3b76", "#c7417b", "#f5487f", "#e3e4ef", "#27141a" ],
+                [ "#1f306e", "#553772", "#8f3b76", "#c7417b", "#f5487f", "#fff", "#000" ],
+                [ "#b30000", "#ff4f00", "#ffb200", "#c81343", "#ff0062", "#fff", "#000" ],
+                [ "#b30000", "#ff4f00", "#ffb200", "#c81343", "#ff0062", "#fff", "#000" ]
+        ];
 }
 
 
@@ -747,6 +785,7 @@ function play()
 {
 	uiFeedback();
 	initSound();
+        initVisuals();
 	for ( l=0; l<song.voices.length; l++ )
 	{
 		var voice = song.voices[l];
@@ -814,12 +853,12 @@ function init(n)
         CVS.width = CVS.height = SZ;
         CTR = SZ/2;
         CD = {
-                colors: [
-                        "#f2668b", "#23c7d9",
-                        "#48d9a4", "#f2bf27"
-                ],
+                colors: [],
                 bgC: "#ddeeff"
         };
+
+        initVisuals();
+
 	n ? tokenData.hash = n : newHash() ;
 	resetSeed();
 }
