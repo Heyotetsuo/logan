@@ -739,7 +739,7 @@ function visualize( note, velo, delay, hold )
         var color = CD.colors[urandint()%numClrs];
         var r = displace(
                 BASESZ + ( urand() * SZ_RANGE * 2-SZ_RANGE ),
-                BASESZ+SZ_RANGE/2,
+                BASESZ,
                 2
         );
         var x = urand()*( (SZ-r*2)+r*2 );
