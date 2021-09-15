@@ -723,25 +723,11 @@ function compose()
 
 
 // VISUALIZATION
-function displace( n, max, i )
-{
-        if ( i > 0 )
-        {
-                i--;
-                return displace( n, max, i );
-        } else {
-                return Math.sqrt( n * max ); 
-        }
-}
 function visualize( note, velo, delay, hold )
 {
         var numClrs = CD.colors.length;
         var color = CD.colors[urandint()%numClrs];
-        var r = displace(
-                BASESZ + ( urand() * SZ_RANGE * 2-SZ_RANGE ),
-                BASESZ,
-                2
-        );
+        var r = BASESZ;
         var x = urand()*( (SZ-r*2)+r*2 );
         var y = urand()*( (SZ-r*2)+r*2 );
 
@@ -752,8 +738,10 @@ function visualize( note, velo, delay, hold )
 }
 function initVisuals()
 {
-        BASESZ = urand()*SZ;
-        SZ_RANGE = urand()*BASESZ;
+        var n = urand()*SZ;
+        BASESZ = Math.pow( n, 2 ) / SZ;
+        log( BASESZ );
+        SZ_RANGE = urand() * BASESZ;
         PALETTES = [
                 [ "#ffff4d", "#ffff4d", "#4d7aff", "#3655b3", "#ff4d4d" ],
                 [ "#ffff4d", "#ffff4d", "#8936b3", "#4d7aff", "#3655b3", "#ff4d4d" ],
