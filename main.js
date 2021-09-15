@@ -155,7 +155,7 @@ function hexMath( hex, num, op )
 	var hex2 = '#';
 	hex = hex.slice(1);
 
-	for( i=0; i<hex.length/2; i++ )
+	for( i=0; i<hex.length; i+=2 )
 	{
 		n = doOp(
 			parseInt( hex.slice(i,i+2), 16 ),
@@ -420,6 +420,7 @@ function addBG( bIdx )
         );
         ca = CD.bgC;
 	cb = hexMath( ca, 0.95, '*' );
+        logf( "ca: %s, cb: %s", [ca,cb] );
         grad.addColorStop( 0, ca );
         grad.addColorStop( 1, cb );
         C.fillStyle = grad;
@@ -676,8 +677,10 @@ function compose()
                 [ "#b30000", "#ff4f00", "#ffb200", "#c81343", "#ff0062", "#fff", "#000" ],
                 [ "#b30000", "#ff4f00", "#ffb200", "#c81343", "#ff0062", "#fff", "#000" ]
         ];
+        var bgs = [ "#e0e0e0", "#101010", "#ddeeff", "#ffff4d", "#1f306e", "#b30000" ];
         var n = urandint()%keys.length;
         CD.colors = pals[n];
+        CD.bgC = bgs[urandint()%bgs.length];
 	song = {
 		key: keys[n],
 		tempo: getTempo(),
@@ -739,21 +742,9 @@ function visualize( note, velo, delay, hold )
 function initVisuals()
 {
         var n = urand()*SZ;
-        BASESZ = Math.pow( n, 3 ) / Math.pow( SZ, 2 );
+        BASESZ = Math.pow( n, 3 ) / Math.pow( SZ, 2 ) + 5;
         log( BASESZ );
         SZ_RANGE = urand() * BASESZ;
-        PALETTES = [
-                [ "#ffff4d", "#ffff4d", "#4d7aff", "#3655b3", "#ff4d4d" ],
-                [ "#ffff4d", "#ffff4d", "#8936b3", "#4d7aff", "#3655b3", "#ff4d4d" ],
-                [ "#ff2c00", "#7e31ab", "#37b6a1", "#f2797f", "#2632b3", "#869cbe" ],
-                [ "#ffa586", "#ffdb61", "#4e9bde", "#85ccb9", "#aee467", "#ff86cd", "#397dff" ],
-                [ "#1f306e", "#553772", "#8f3b76", "#c7417b", "#f5487f", "#e3e4ef", "#27141a" ],
-                [ "#1f306e", "#553772", "#8f3b76", "#c7417b", "#f5487f", "#fff", "#000" ],
-                [ "#b30000", "#ff4f00", "#ffb200", "#c81343", "#ff0062", "#fff", "#000" ],
-                [ "#b30000", "#ff4f00", "#ffb200", "#c81343", "#ff0062", "#fff", "#000" ]
-        ];
-        BGS = [ 
-        ]
 }
 
 
