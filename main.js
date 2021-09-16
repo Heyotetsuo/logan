@@ -387,6 +387,24 @@ function drawCircle( x, y, r )
 }
 
 
+// FX
+function addGrain( amount )
+{
+        C.save();
+        var imgData = C.getImageData(0,0,SZ,SZ);
+        var c, i=imgData.data.length-1;
+        while( i>=0 )
+        {
+                c = urandint()%(amount*2)-amount;
+                imgData.data[i] += c;
+                imgData.data[i+1] += c;
+                imgData.data[i+2] += c;
+                i -= 4;
+        }
+        C.putImageData( imgData, 0, 0 );
+        C.restore();
+}
+
 
 // COMPLEX SHAPES
 function addBlob( p, size, spread, count, clip )
@@ -428,6 +446,9 @@ function addBG( bIdx )
         {
                 C.fillRect( 0, 0, SZ, SZ );
         }
+        addGrain(4);
+        fastBlur(1);
+        addGrain(2);
         saveImg( bIdx );
         if ( imgBuff ) imgBuff[0] = imgBuff[bIdx];
 }
@@ -733,11 +754,15 @@ function visualize( note, velo, delay, hold )
         var r = BASESZ;
         var x = urand()*( (SZ-r*2)+r*2 );
         var y = urand()*( (SZ-r*2)+r*2 );
-
-        log( "color: "+color );
+        var a = floor( (1-(r/SZ))*256 ).toString(16);
+        var ahex = String( "00" + a ).slice(-2);
 
         C.fillStyle = color;
-        fillCircle( x, y, r );
+        C.shadowBlur = r/60;
+        C.shadowOffsetX = SZ*-2;
+        C.shadowColor = color + ahex;
+        fillCircle( x+SZ*2, y, r );
+
 }
 function initVisuals()
 {
