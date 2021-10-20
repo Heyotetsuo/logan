@@ -1,5 +1,5 @@
 var round=Math.round,floor=Math.floor,abs=Math.abs,sqrt=Math.sqrt,asin=Math.asin,acos=Math.acos,sin=Math.sin,cos=Math.cos,PI=Math.PI,min=Math.min,max=Math.max,pow=Math.pow;
-var CVS,SZ,CTR,CD,BASESZ,SZ_RANGE,SPOKES,IDX_ARR,NOTE_COUNT, doc=document,win=window,hidden;
+var CVS,SZ,CTR,CD,BASESZ,SZ_RANGE,SPOKES,IDX_ARR,NOTE_COUNT,SORT_METHOD, doc=document,win=window,hidden;
 var imgBuff,lp,key,seed,t,b, rvrb,song,soundLoaded=false;
 var COUNTER=0;
 
@@ -820,9 +820,24 @@ function compose()
 // VISUALIZATION
 function getNextPoint()
 {
-        var n = IDX_ARR.splice( urandint()%IDX_ARR.length, 1 );
-        var x = sin( n*(2*PI/SPOKES) ) * n;
-        var y = cos( n*(2*PI/SPOKES) ) * n;
+        var n, x, y;
+        switch ( SORT_METHOD )
+        {
+                case 0:
+                        n = IDX_ARR.splice( urandint()%IDX_ARR.length, 1 );
+                        break;
+                case 1:
+                        n = IDX_ARR.splice( 0, 1 );
+                        break;
+                case 2:
+                        n = IDX_ARR.splice( IDX_ARR.length-1, 1 );
+                        break;
+                default:
+                        log( "Error: SORT_METHOD should be and int between 0 and 2" );
+                        break;
+        }
+        x = sin( n*(2*PI/SPOKES) ) * n;
+        y = cos( n*(2*PI/SPOKES) ) * n;
         return [CTR+x,CTR+y];
 }
 function getRandColor()
@@ -865,7 +880,8 @@ function initVisuals()
         BASESZ = Math.pow(n,3) / Math.pow(SZ,2) + 5;
         // BASESZ = n + 5;
         SZ_RANGE = urand() * BASESZ;
-        SPOKES = urandint() % 32;
+        SPOKES = urandint() % 30 + 2;
+        SORT_METHOD = urandint() % 3;
         if ( song ) IDX_ARR = getIndexes();
 }
 
@@ -910,7 +926,6 @@ function play()
                                         fullDelay = ( delay + j + i * (len-1) ) * ( song.tempo/60 );
                                         setTimeout( ()=>visualize(note,velo,delay,hold), fullDelay*1000 );
 					voice.instrument.play( note, velo, fullDelay, hold );
-                                        log( COUNTER );
                                         COUNTER++;
 				}
 			}
