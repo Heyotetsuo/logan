@@ -1,6 +1,7 @@
 var round=Math.round,floor=Math.floor,abs=Math.abs,sqrt=Math.sqrt,asin=Math.asin,acos=Math.acos,sin=Math.sin,cos=Math.cos,PI=Math.PI,min=Math.min,max=Math.max,pow=Math.pow;
-var CVS,SZ,CTR,CD,BASESZ,SZ_RANGE,SPOKES,IDX=0, doc=document,win=window,hidden;
+var CVS,SZ,CTR,CD,BASESZ,SZ_RANGE,SPOKES,IDX_ARR,NOTE_COUNT, doc=document,win=window,hidden;
 var imgBuff,lp,key,seed,t,b, rvrb,song,soundLoaded=false;
+var COUNTER=0;
 
 // RANDOMNESS
 function urandint(n)
@@ -105,12 +106,6 @@ function copyArray( a, b )
 	}
 	return b;
 }
-function formatJSON( key, val )
-{
-        if ( typeof val === "array" )
-        {
-        }
-}
 function displaySong()
 {
 	var el = doc.createElement( "div" );
@@ -124,6 +119,33 @@ function displaySong()
         el.style.whiteSpace = "pre-wrap";
         el.style.fontFamily = "monospace";
 	doc.body.appendChild( el );
+}
+function countNotes()
+{
+        var voice, bar, tot=0, i,j,k;
+        for( i=0; i<song.voices.length; i++ )
+        {
+                voice = song.voices[i];
+                for( j=0; j<voice.bars.length; j++ )
+                {
+                        bar = voice.bars[j];
+                        for( k=0; k<bar.notes.length; k++ )
+                        {
+                                tot++;
+                        }
+                }
+        }
+        return tot*4;
+}
+function getIndexes()
+{
+        var max = countNotes();
+        var arr=[], i=0;
+        for( i=0; i<max; i++ )
+        {
+                arr.push( i );
+        }
+        return arr;
 }
 
 
@@ -189,7 +211,7 @@ function d2r( deg ){ return deg*PI/180; }
 function r2d( rad ){ return rad*180/PI; }
 function getHypo(a,b){ return sqrt(abs(a*a+b*b)); }
 function getAngle(a,b,c){ return Math.acos(abs(a/c))*(180/PI); }
-function getNextPointInCircle( x, y, Rx, Ry )
+function getPointInCircle( x, y, Rx, Ry )
 {
         var r = urand();
         var rx = Rx*sqrt(r);
@@ -389,7 +411,7 @@ function drawEllipse( x, y, sx, sy, r )
         C.arc( 0, 0, r, 0, 2*PI, false );
         C.restore();
 }
-function getNextPointOnCircle( deg, x, y, r )
+function getPointOnCircle( deg, x, y, r )
 {
         var rad = deg * (PI/180);
         return [
@@ -419,13 +441,13 @@ function sketchCircle( x, y, r )
         {
                 angs.push( i * (360/30) );
         }
-        a = getNextPointOnCircle( angs[0], x, y, r );
+        a = getPointOnCircle( angs[0], x, y, r );
         C.moveTo( a[0], a[1] );
         for( i=1; i<angs.length; i+=2 )
         {
                 R = r + (r/50)*rand();
-                a = getNextPointOnCircle( angs[i], x, y, R*1.02 );
-                b = getNextPointOnCircle( angs[i+1], x, y, R );
+                a = getPointOnCircle( angs[i], x, y, R*1.02 );
+                b = getPointOnCircle( angs[i+1], x, y, R );
                 C.quadraticCurveTo( a[0], a[1], b[0], b[1] );
         }
 }
@@ -462,7 +484,7 @@ function addBlob( p, size, spread, count, clip )
         var pos, rad = ( (spread[0]+spread[1])/2 );
         for( i=0; i<count; i++ )
         {
-                pos = getNextPointInCircle(
+                pos = getPointInCircle(
                         x, y,
                         spread[0],
                         spread[1]
@@ -612,7 +634,7 @@ function checkQuery( query )
 	);
 
 }
-function getNextQuery( query )
+function getQuery( query )
 {
 	var i=query[0], j=query[1], k=query[2];
 	var voice = song.voices[i];
@@ -720,9 +742,9 @@ function revise()
 					barA.notes[k] = getNote();
 				}
 			}
-			queryB = getNextQuery( queryB );
+			queryB = getQuery( queryB );
 		}
-		queryA = getNextQuery( queryA );
+		queryA = getQuery( queryA );
 	}
 }
 function compose()
@@ -798,9 +820,9 @@ function compose()
 // VISUALIZATION
 function getNextPoint()
 {
-        var x = sin( IDX*(2*PI/SPOKES) ) * IDX;
-        var y = cos( IDX*(2*PI/SPOKES) ) * IDX;
-        IDX++;
+        var n = IDX_ARR.splice( urandint()%IDX_ARR.length, 1 );
+        var x = sin( n*(2*PI/SPOKES) ) * n;
+        var y = cos( n*(2*PI/SPOKES) ) * n;
         return [CTR+x,CTR+y];
 }
 function getRandColor()
@@ -820,7 +842,6 @@ function visualize( note, velo, delay, hold )
         // var x = urand()*( (SZ-r*2)+r*2 );
         // var y = urand()*( (SZ-r*2)+r*2 );
         var p = getNextPoint();
-        log( p );
         var x = p[0], y = p[1];
         var a = floor( (1-(r/SZ))*256 ).toString(16);
         var ahex = String( "00" + a ).slice(-2);
@@ -845,6 +866,7 @@ function initVisuals()
         // BASESZ = n + 5;
         SZ_RANGE = urand() * BASESZ;
         SPOKES = urandint() % 32;
+        if ( song ) IDX_ARR = getIndexes();
 }
 
 
@@ -888,6 +910,8 @@ function play()
                                         fullDelay = ( delay + j + i * (len-1) ) * ( song.tempo/60 );
                                         setTimeout( ()=>visualize(note,velo,delay,hold), fullDelay*1000 );
 					voice.instrument.play( note, velo, fullDelay, hold );
+                                        log( COUNTER );
+                                        COUNTER++;
 				}
 			}
 		}
