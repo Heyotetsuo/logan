@@ -105,16 +105,24 @@ function copyArray( a, b )
 	}
 	return b;
 }
+function formatJSON( key, val )
+{
+        if ( typeof val === "array" )
+        {
+        }
+}
 function displaySong()
 {
 	var el = doc.createElement( "div" );
-	el.innerText = JSON.stringify(song);
+	el.innerText = JSON.stringify(song,null,4);
 	el.style.textAlign = "left";
 	el.style.padding = "2%";
 	el.style.cursor = "pointer";
 	el.style.position = "absolute";
 	el.style.zIndex = "1";
 	el.style.top = "100vh";
+        el.style.whiteSpace = "pre-wrap";
+        el.style.fontFamily = "monospace";
 	doc.body.appendChild( el );
 }
 
