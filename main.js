@@ -1,5 +1,5 @@
 var round=Math.round,floor=Math.floor,abs=Math.abs,sqrt=Math.sqrt,asin=Math.asin,acos=Math.acos,sin=Math.sin,cos=Math.cos,PI=Math.PI,min=Math.min,max=Math.max,pow=Math.pow;
-var CVS,SZ,CTR,CD,BASESZ,SZ_RANGE, doc=document,win=window,hidden;
+var CVS,SZ,CTR,CD,BASESZ,SZ_RANGE,SPOKES,IDX=0, doc=document,win=window,hidden;
 var imgBuff,lp,key,seed,t,b, rvrb,song,soundLoaded=false;
 
 // RANDOMNESS
@@ -38,6 +38,7 @@ function resetSeed()
                 16
         );
 }
+function chooseAtRandom( arr ){ return arr[urandint()%arr.length]; }
 
 
 
@@ -180,7 +181,7 @@ function d2r( deg ){ return deg*PI/180; }
 function r2d( rad ){ return rad*180/PI; }
 function getHypo(a,b){ return sqrt(abs(a*a+b*b)); }
 function getAngle(a,b,c){ return Math.acos(abs(a/c))*(180/PI); }
-function getPointInCircle( x, y, Rx, Ry )
+function getNextPointInCircle( x, y, Rx, Ry )
 {
         var r = urand();
         var rx = Rx*sqrt(r);
@@ -380,6 +381,46 @@ function drawEllipse( x, y, sx, sy, r )
         C.arc( 0, 0, r, 0, 2*PI, false );
         C.restore();
 }
+function getNextPointOnCircle( deg, x, y, r )
+{
+        var rad = deg * (PI/180);
+        return [
+                x + r * sin(rad),
+                y + r * cos(rad)
+        ];
+}
+function scratchCircle( x, y, r )
+{
+        var strokes=min(r,100);
+        var w = r/strokes, i;
+        C.lineWidth = w*3;
+        for( i=strokes-1; i>=0; i-=w )
+        {
+                sketchCircle( x, y, i );
+                C.stroke();
+        }
+        drawCircle( x, y, r/5 );
+        C.fill();
+}
+function sketchCircle( x, y, r )
+{
+        C.beginPath();
+        C.moveTo( x, y-r );
+        var angs = [], R, a, b, i;
+        for( i=0; i<=30; i++ )
+        {
+                angs.push( i * (360/30) );
+        }
+        a = getNextPointOnCircle( angs[0], x, y, r );
+        C.moveTo( a[0], a[1] );
+        for( i=1; i<angs.length; i+=2 )
+        {
+                R = r + (r/50)*rand();
+                a = getNextPointOnCircle( angs[i], x, y, R*1.02 );
+                b = getNextPointOnCircle( angs[i+1], x, y, R );
+                C.quadraticCurveTo( a[0], a[1], b[0], b[1] );
+        }
+}
 function drawCircle( x, y, r )
 {
         C.beginPath();
@@ -413,7 +454,7 @@ function addBlob( p, size, spread, count, clip )
         var pos, rad = ( (spread[0]+spread[1])/2 );
         for( i=0; i<count; i++ )
         {
-                pos = getPointInCircle(
+                pos = getNextPointInCircle(
                         x, y,
                         spread[0],
                         spread[1]
@@ -747,29 +788,55 @@ function compose()
 
 
 // VISUALIZATION
+function getNextPoint()
+{
+        var x = sin( IDX*(2*PI/SPOKES) ) * IDX;
+        var y = cos( IDX*(2*PI/SPOKES) ) * IDX;
+        IDX++;
+        return [CTR+x,CTR+y];
+}
+function getRandColor()
+{
+        var c = chooseAtRandom( CD.colors );
+        while( c === CD.bgC )
+        {
+                c = chooseAtRandom( CD.colors );
+        }
+        return c;
+}
 function visualize( note, velo, delay, hold )
 {
         var numClrs = CD.colors.length;
-        var color = CD.colors[urandint()%numClrs];
+        var color = getRandColor();
         var r = BASESZ;
-        var x = urand()*( (SZ-r*2)+r*2 );
-        var y = urand()*( (SZ-r*2)+r*2 );
+        // var x = urand()*( (SZ-r*2)+r*2 );
+        // var y = urand()*( (SZ-r*2)+r*2 );
+        var p = getNextPoint();
+        log( p );
+        var x = p[0], y = p[1];
         var a = floor( (1-(r/SZ))*256 ).toString(16);
         var ahex = String( "00" + a ).slice(-2);
+	var cb = hexMath( CD.bgC, 0.95, '*' );
 
-        C.fillStyle = color;
-        C.shadowBlur = r/60;
-        C.shadowOffsetX = SZ*-2;
-        C.shadowColor = color + ahex;
-        fillCircle( x+SZ*2, y, r );
-
+        // C.shadowBlur = SZ/600;
+        // C.shadowOffsetX = SZ/600;
+        // C.shadowOffsetY = SZ/600;
+        // C.shadowColor = "#00000040";
+        // C.fillStyle = cb;
+        // drawCircle( x, y, r );
+        // C.fill();
+        // C.shadowColor = "#00000000";
+        C.fillStyle = color + ahex;
+        C.strokeStyle = color + ahex;
+        scratchCircle( x, y, r );
 }
 function initVisuals()
 {
-        var n = urand()*SZ;
-        BASESZ = Math.pow( n, 3 ) / Math.pow( SZ, 2 ) + 5;
-        log( BASESZ );
+        var n = urand()*SZ/2.5;
+        BASESZ = Math.pow(n,3) / Math.pow(SZ,2) + 5;
+        // BASESZ = n + 5;
         SZ_RANGE = urand() * BASESZ;
+        SPOKES = urandint() % 32;
 }
 
 
@@ -797,7 +864,7 @@ function play()
 		var voice = song.voices[l];
 		var len = voice.bars.length;
 		var bars = voice.bars, i,j,k,l;
-                var note, velo, delay, hold;
+                var note, velo, delay, hold, idx;
 		for ( i=0; i<4; i++ )
 		{
 			for ( j=0; j<bars.length; j++ )
@@ -811,9 +878,7 @@ function play()
                                         
                                         // (note offset + bar offset + (loop offset * (len-1))) * tempo offset
                                         fullDelay = ( delay + j + i * (len-1) ) * ( song.tempo/60 );
-
                                         setTimeout( ()=>visualize(note,velo,delay,hold), fullDelay*1000 );
-
 					voice.instrument.play( note, velo, fullDelay, hold );
 				}
 			}
