@@ -1,7 +1,6 @@
 var round=Math.round,floor=Math.floor,abs=Math.abs,sqrt=Math.sqrt,asin=Math.asin,acos=Math.acos,sin=Math.sin,cos=Math.cos,PI=Math.PI,min=Math.min,max=Math.max,pow=Math.pow;
-var CVS,SZ,CTR,CD,BASESZ,SZ_RANGE,SPOKES,IDX_ARR,NOTE_COUNT,SORT_METHOD, doc=document,win=window,hidden;
-var imgBuff,lp,key,seed,t,b, rvrb,song,soundLoaded=false;
-var COUNTER=0,SEEDS=[];
+var doc=document,win=window,hidden, imgBuff,lp,key,seed,t,b, rvrb,song,soundLoaded=false,SEEDS=[];
+var CVS,SZ,CTR,CD;
 
 // RANDOMNESS
 function urandint(n)
@@ -527,7 +526,6 @@ function addBG( bIdx )
         );
         ca = CD.bgC;
         cb = hexMath( ca, 0.95, '*' );
-        logf( "ca: %s, cb: %s", [ca,cb] );
         grad.addColorStop( 0, ca );
         grad.addColorStop( 1, cb );
         C.fillStyle = grad;
@@ -839,23 +837,24 @@ function compose()
 function getNextPoint( i )
 {
         var n, x, y;
-        switch ( SORT_METHOD )
+        var idxArr = CD.visuals[i].idx_arr;
+        switch ( CD.visuals[i].sort_method )
         {
                 case 0:
-                        n = IDX_ARR.splice( urandint(i)%IDX_ARR.length, 1 );
+                        n = idxArr.splice( urandint(i)%idxArr.length, 1 );
                         break;
                 case 1:
-                        n = IDX_ARR.splice( 0, 1 );
+                        n = idxArr.splice( 0, 1 );
                         break;
                 case 2:
-                        n = IDX_ARR.splice( IDX_ARR.length-1, 1 );
+                        n = idxArr.splice( idxArr.length-1, 1 );
                         break;
                 default:
-                        log( "Error: SORT_METHOD should be and int between 0 and 2" );
+                        log( "Error: sort method should be and int between 0 and 2" );
                         break;
         }
-        x = sin( n*(2*PI/SPOKES) ) * n;
-        y = cos( n*(2*PI/SPOKES) ) * n;
+        x = sin( n*(2*PI/CD.visuals[i].spokes) ) * n;
+        y = cos( n*(2*PI/CD.visuals[i].spokes) ) * n;
         return [CTR+x,CTR+y];
 }
 function getRandColor( i )
@@ -879,7 +878,7 @@ function visualize( note, velo, delay, hold, i )
         var numClrs = CD.colors.length;
         var color = getRandColor( i );
         var numClrs = CD.colors.length;
-        var r = BASESZ;
+        var r = CD.visuals[i].basesz;
         var p = getNextPoint( i );
         var numClrs = CD.colors.length;
         var x = p[0], y = p[1];
@@ -894,15 +893,14 @@ function visualize( note, velo, delay, hold, i )
 }
 function initVisuals( i )
 {
-        var n = urand(i)*SZ/2.5;
-        BASESZ = Math.pow(n,3) / Math.pow(SZ,2) + 5;
-        SZ_RANGE = urand(i) * BASESZ;
-        SPOKES = urandint(i) % 30 + 2;
-        SORT_METHOD = urandint(i) % 3;
-        if ( song ) IDX_ARR = getIndexes();
+        var n = urand(i)*SZ/2.5, viz={};
+        viz.basesz = Math.pow(n,3) / Math.pow(SZ,2) + 5;
+        viz.sz_range = urand(i) * viz.basesz;
+        viz.spokes = urandint(i) % 30 + 2;
+        viz.sort_method = urandint(i) % 3;
+        if ( song ) viz.idx_arr = getIndexes();
+        CD.visuals[ (i||0) ] = viz;
 }
-
-
 
 // SOUND
 function initSound()
@@ -922,13 +920,16 @@ function playAll()
         uiFeedback();
         initSound();
         resetSeed();
-        initSeeds(2);
+        initSeeds( 2 );
         addBG();
         play();
+        for( var i=0; i<SEEDS.length; i++ )
+        {
+                drawAll( i, timed=true );
+        }
 }
-function play(m)
+function play()
 {
-        initVisuals( m );
         for ( l=0; l<song.voices.length; l++ )
         {
                 var voice = song.voices[l];
@@ -948,23 +949,13 @@ function play(m)
 
                                         // (note offset + bar offset + (loop offset * (len-1))) * tempo offset
                                         fullDelay = ( delay + j + i * (len-1) ) * ( song.tempo/60 );
-                                        if ( m )
-                                        {
-                                                for( var m=0; m<SEEDS.length; m++ )
-                                                {
-                                                        setTimeout( ()=>visualize(note,velo,delay,hold,m), fullDelay*1000 );
-                                                }
-                                        } else {
-                                                setTimeout( ()=>visualize(note,velo,delay,hold), fullDelay*1000 );
-                                        }
                                         voice.instrument.play( note, velo, fullDelay, hold );
-                                        COUNTER++;
                                 }
                         }
                 }
         }
 }
-function drawAll( m )
+function drawAll( m, timed )
 {
         initVisuals( m );
         for ( l=0; l<song.voices.length; l++ )
@@ -984,8 +975,14 @@ function drawAll( m )
                                         delay = bars[j].delays[k];
                                         hold = bars[j].holds[k];
 
-                                        visualize( note, velo, delay, hold, m );
-                                        COUNTER++;
+                                        if ( timed )
+                                        {
+                                                // (note offset + bar offset + (loop offset * (len-1))) * tempo offset
+                                                fullDelay = ( delay + j + i * (len-1) ) * ( song.tempo/60 );
+                                                setTimeout( ()=>visualize(note,velo,delay,hold,m), fullDelay*1000 );
+                                        } else {
+                                                visualize( note, velo, delay, hold, m );
+                                        }
                                 }
                         }
                 }
@@ -1036,7 +1033,8 @@ function init(n)
         CTR = SZ/2;
         CD = {
                 colors: [],
-                bgC: "#ddeeff"
+                bgC: "#ddeeff",
+                visuals: []
         };
 
         initVisuals();
